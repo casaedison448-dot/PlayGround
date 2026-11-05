@@ -93,6 +93,31 @@ canvas { display: block; }
   font-size: 13px;
 }
 
+.pause-btn {
+  display: none;
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(50% + 10px);
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: rgba(5, 22, 27, 0.72);
+  color: var(--sand);
+  font-family: var(--font-narrow);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+.pause-btn:active { transform: translateX(-50%) scale(0.92); }
+
 .hud-left {
   position: absolute;
   top: calc(16px + env(safe-area-inset-top));
@@ -971,6 +996,7 @@ kbd {
 
 @media (pointer: coarse) {
   .hint { display: none; }
+  .pause-btn { display: grid; place-items: center; }
   .prompt { bottom: calc(228px + env(safe-area-inset-bottom)); }
   .fishing-ui { bottom: calc(234px + env(safe-area-inset-bottom)); }
   .sail-info { bottom: calc(14px + env(safe-area-inset-bottom)); }
@@ -994,7 +1020,7 @@ kbd {
   .resources { display: grid; grid-template-columns: repeat(3, auto); gap: 3px; padding: 4px; }
   .res { font-size: 9px; padding: 2px 4px; }
   .res span { font-size: 10px; }
-  .toasts { top: calc(12px + env(safe-area-inset-top)); width: 52vw; }
+  #toasts { top: calc(236px + env(safe-area-inset-top)); width: 86vw; }
   .toast { font-size: 10px; padding: 6px 10px; }
   .banner { font-size: 20px; letter-spacing: 0.18em; top: 17%; }
   .prompt { font-size: 11px; padding: 6px 10px 6px 7px; }
@@ -1024,6 +1050,8 @@ kbd {
   .prompt { bottom: calc(190px + env(safe-area-inset-bottom)); }
   .quest-panel { display: none; }
   .vitals { width: 160px; }
+  #toasts { top: calc(8px + env(safe-area-inset-top)); width: 44vw; }
+  .toast { font-size: 9px; padding: 5px 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

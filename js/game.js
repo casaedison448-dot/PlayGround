@@ -99,6 +99,7 @@ class Game {
       craftInventory: id('craftInventory'), recipeList: id('recipeList'),
       victoryStats: id('victoryStats'), tInteract: id('tInteract'),
       stick: id('stick'), stickKnob: id('stickKnob'), hint: id('hint'),
+      pauseBtn: id('pauseBtn'),
     };
     this.el.vitals = {};
     document.querySelectorAll('.vital').forEach(node => {
@@ -170,22 +171,11 @@ class Game {
     this.setFishingVisible(false);
   }
   buildViewModel() {
-    const skin = new THREE.MeshStandardMaterial({ color: 0xc98d62, roughness: 1 });
     const wood = new THREE.MeshStandardMaterial({ color: 0x7c5734, roughness: 1 });
     const stone = new THREE.MeshStandardMaterial({ color: 0x8b8d84, roughness: 0.9, flatShading: true });
     const rope = new THREE.MeshStandardMaterial({ color: 0xb7a06c, roughness: 1 });
     this.vm = new THREE.Group();
     this.camera.add(this.vm);
-
-    const fist = new THREE.Group();
-    const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.11, 0.52, 7), skin);
-    arm.position.set(0, -0.13, 0.14);
-    arm.rotation.x = 0.55;
-    fist.add(arm);
-    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 7), skin);
-    hand.scale.set(1, 0.9, 1.25);
-    hand.position.set(0, 0.1, -0.1);
-    fist.add(hand);
 
     const axe = new THREE.Group();
     const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.042, 1.05, 6), wood);
@@ -201,29 +191,38 @@ class Game {
     binding.position.set(-0.12, 0.4, 0);
     axe.add(binding);
 
+    // Spear: shaft recedes from the lower right toward the centre of the view.
     const spear = new THREE.Group();
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.032, 1.85, 6), wood);
-    shaft.rotation.x = Math.PI / 2 - 0.42;
-    shaft.position.set(0, 0.08, -0.55);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.032, 1.75, 6), wood);
+    shaft.rotation.x = Math.PI / 2;
+    shaft.position.z = -0.8;
     spear.add(shaft);
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.34, 5), stone);
-    tip.rotation.x = -Math.PI / 2 - 0.42;
-    tip.position.set(0, 0.43, -1.42);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.062, 0.3, 5), stone);
+    tip.rotation.x = -Math.PI / 2;
+    tip.position.z = -1.78;
     spear.add(tip);
-    const lash = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.11, 6), rope);
-    lash.rotation.x = Math.PI / 2 - 0.42;
-    lash.position.set(0, 0.38, -1.25);
+    const lash = new THREE.Mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.1, 6), rope);
+    lash.rotation.x = Math.PI / 2;
+    lash.position.z = -1.58;
     spear.add(lash);
 
+    // Rod: long diagonal pole with the reel sitting on the grip.
     const rod = new THREE.Group();
-    const rodShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.026, 1.65, 5), wood);
-    rodShaft.rotation.x = -1.06;
-    rodShaft.position.set(0, 0.46, -0.56);
+    const rodShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.026, 1.45, 5), wood);
+    rodShaft.position.set(0, 0.24, 0);
+    rodShaft.rotation.z = 0.25;
+    rodShaft.rotation.x = 0.55;
     rod.add(rodShaft);
     const reel = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.06, 8), stone);
     reel.rotation.z = Math.PI / 2;
-    reel.position.set(0, 0.12, -0.22);
+    reel.rotation.x = 0.55;
+    reel.position.set(-0.06, -0.19, 0.13);
     rod.add(reel);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.034, 0.26, 6), rope);
+    grip.position.set(0, -0.17, 0.12);
+    grip.rotation.z = 0.25;
+    grip.rotation.x = 0.55;
+    rod.add(grip);
 
     const torch = new THREE.Group();
     const torchHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.95, 6), wood);
@@ -251,10 +250,9 @@ class Game {
       return group;
     };
     this.vmTools = {
-      fist: make(fist, 0.45, -0.44, -0.72, -0.18, 0.12, -0.05, 0.52),
-      axe: make(axe, 0.45, -0.46, -0.78, -0.1, 0.08, -0.2, 0.68),
-      spear: make(spear, 0.38, -0.42, -0.8, -0.04, 0.06, -0.1, 0.66),
-      rod: make(rod, 0.36, -0.4, -0.72, 0.1, 0.05, -0.12, 0.72),
+      axe: make(axe, 0.5, -0.5, -0.95, -0.05, 0.1, -0.12, 0.55),
+      spear: make(spear, 0.34, -0.36, -0.38, 0.12, 0.14, 0.02, 0.9),
+      rod: make(rod, 0.4, -0.44, -0.62, 0.0, 0.05, -0.05, 0.85),
       torch: make(torch, 0.42, -0.44, -0.72, -0.24, 0.1, -0.05, 0.62),
     };
     this.vm.visible = false;
@@ -300,6 +298,11 @@ class Game {
     });
     $('respawnBtn').addEventListener('click', () => this.respawn());
     $('againBtn').addEventListener('click', () => window.location.reload());
+    this.el.pauseBtn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.isActive()) this.togglePause(true);
+    });
 
     this.canvas.addEventListener('contextmenu', e => e.preventDefault());
     this.canvas.addEventListener('pointerdown', e => this.onCanvasPointerDown(e));
@@ -1785,7 +1788,7 @@ class Game {
     const y = 0.11 + Math.sin(this.elapsed * 2.4) * 0.03 + (bite ? -0.09 : 0);
     this.bobber.position.set(spot.x, y, spot.z);
     this.bobber.rotation.y += 0.02;
-    const tip = this.camera.localToWorld(new THREE.Vector3(0.2, -0.08, -1.05));
+    const tip = this.camera.localToWorld(new THREE.Vector3(0.23, 0.24, -1.05));
     const pos = this.rodLine.geometry.attributes.position;
     pos.setXYZ(0, tip.x, tip.y, tip.z);
     pos.setXYZ(1, spot.x, y, spot.z);
@@ -1799,17 +1802,17 @@ class Game {
       if (this.torchLight) this.torchLight.intensity = 0;
       return;
     }
-    let tool = 'fist';
+    let tool = null;
     if (this.fishing.state !== 'idle') tool = 'rod';
     else if (this.aim && this.aim.kind === 'animal' && this.tools.spear) tool = 'spear';
     else if (this.aim && (this.aim.kind === 'tree' || this.aim.kind === 'rock') && this.tools.axe) tool = 'axe';
     else if (this.aim && this.aim.kind === 'animal' && this.tools.axe) tool = 'axe';
     else if (this.isNight() && this.tools.torch) tool = 'torch';
-    else if (this.tools.spear && this.player.stamina > 40) tool = 'spear';
 
     for (const [id, group] of Object.entries(this.vmTools)) group.visible = id === tool;
-    this.vm.visible = true;
+    this.vm.visible = Boolean(tool);
     if (this.torchLight) this.torchLight.intensity = tool === 'torch' ? 1.7 : 0;
+    if (!tool) return;
 
     if (this.swing > 0) this.swing = Math.max(0, this.swing - dt * 4.3);
     const arm = this.swing > 0 ? Math.sin((1 - this.swing) * Math.PI) : 0;
