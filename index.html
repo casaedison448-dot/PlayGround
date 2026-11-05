@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#071c23" />
+  <title>Náufrago · Islas Perdidas</title>
+  <meta name="description" content="Juego 3D de supervivencia: sobrevive en una isla, pesca, construye una balsa y escapa del archipiélago." />
+  <link rel="stylesheet" href="./css/game.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="scene" aria-label="Mundo 3D del juego"></canvas>
+
+    <div id="fx" aria-hidden="true">
+      <div id="stormTint"></div>
+      <div id="waterTint"></div>
+      <div id="damageTint"></div>
+      <div id="flashTint"></div>
+      <div id="vignette"></div>
+    </div>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <div class="brand"><span class="brand-sail">▲</span> NÁUFRAGO</div>
+        <div class="vitals" id="vitals">
+          <div class="vital" data-vital="health">
+            <span class="vicon">♥</span>
+            <div class="vbar"><i></i></div>
+            <span class="vval">100</span>
+          </div>
+          <div class="vital" data-vital="hunger">
+            <span class="vicon">◒</span>
+            <div class="vbar"><i></i></div>
+            <span class="vval">100</span>
+          </div>
+          <div class="vital" data-vital="thirst">
+            <span class="vicon">≋</span>
+            <div class="vbar"><i></i></div>
+            <span class="vval">100</span>
+          </div>
+          <div class="vital" data-vital="warmth">
+            <span class="vicon">✦</span>
+            <div class="vbar"><i></i></div>
+            <span class="vval">100</span>
+          </div>
+          <div class="vital" data-vital="stamina">
+            <span class="vicon">ϟ</span>
+            <div class="vbar"><i></i></div>
+            <span class="vval">100</span>
+          </div>
+        </div>
+        <div id="questPanel" class="quest-panel">
+          <div class="panel-label">OBJETIVO</div>
+          <div id="questText">Reúne materiales para construir la balsa.</div>
+          <div id="questExtra" class="quest-extra"></div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="minimap-wrap">
+          <canvas id="minimap" width="320" height="320"></canvas>
+          <div class="map-north">N</div>
+          <div class="map-ring"></div>
+        </div>
+        <div class="sky-info">
+          <span id="clock">08:00</span>
+          <span id="weather">Despejado</span>
+        </div>
+        <div id="resources" class="resources">
+          <div class="res" title="Madera"><span>🪵</span><b id="invWood">0</b></div>
+          <div class="res" title="Piedra"><span>🪨</span><b id="invStone">0</b></div>
+          <div class="res" title="Cuerda"><span>🧵</span><b id="invRope">0</b></div>
+          <div class="res" title="Tela"><span>🧶</span><b id="invCloth">0</b></div>
+          <div class="res" title="Comida"><span>🍖</span><b id="invFood">0</b></div>
+          <div class="res flare-res" title="Bengalas"><span>🔥</span><b id="invFlare">0</b></div>
+        </div>
+      </div>
+
+      <div id="prompt" class="prompt hidden"><span class="key">E</span><span id="promptText"></span></div>
+      <div id="fishingUi" class="fishing-ui hidden">
+        <div id="fishingLabel">Lanzas la caña…</div>
+        <div class="fishing-track"><i id="fishingFill"></i></div>
+        <div class="fishing-note">Pulsa <b>F</b> cuando pique</div>
+      </div>
+      <div id="crosshair"><i></i></div>
+      <div id="toasts" class="toasts"></div>
+      <div id="banner" class="banner"></div>
+      <div id="hint" class="hint">WASD mover · Ratón mirar · E usar · C fabricar · F pescar · Q comer · Esc pausa</div>
+      <div id="sailInfo" class="sail-info hidden"><span>⛵</span><b id="sailSpeed">0</b><small>nudos</small></div>
+    </div>
+
+    <div id="touch" class="hidden">
+      <div id="stick" class="stick" aria-label="Joystick de movimiento">
+        <div class="stick-knob" id="stickKnob"></div>
+        <span class="stick-label">MOVER</span>
+      </div>
+      <div class="touch-actions">
+        <button type="button" class="tbtn primary" data-action="interact" id="tInteract">USAR</button>
+        <button type="button" class="tbtn" data-action="attack">GOLPE</button>
+        <button type="button" class="tbtn" data-action="fish">PESCA</button>
+        <button type="button" class="tbtn tiny" data-action="eat">COMER</button>
+        <button type="button" class="tbtn tiny" data-action="craft">CREAR</button>
+      </div>
+    </div>
+
+    <div id="startScreen" class="screen start-screen">
+      <div class="start-shade"></div>
+      <div class="start-content">
+        <div class="eyebrow">SUPERVIVENCIA 3D · ARCHIPIÉLAGO</div>
+        <h1>NÁUFRAGO<span>ISLAS PERDIDAS</span></h1>
+        <p class="lead">Tu barco naufragó. Sobrevive, pesca, enfréntate a la tormenta y a los jabalíes. Construye una balsa, recupera las cuatro bengalas de los refugios y escapa del archipiélago.</p>
+        <div class="start-actions">
+          <button type="button" id="playBtn" class="primary-btn" aria-label="Play">JUGAR</button>
+          <button type="button" id="helpBtn" class="ghost-btn">CÓMO JUGAR</button>
+        </div>
+        <div class="start-feats">
+          <span>🌴 Explora 5 islas</span>
+          <span>🎣 Pesca y caza</span>
+          <span>⛈️ Tormentas dinámicas</span>
+          <span>⛵ Construye tu balsa</span>
+        </div>
+        <div class="start-foot">WASD + ratón · E interactuar · C fabricar · F pescar · Q comer</div>
+      </div>
+    </div>
+
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Cómo jugar">
+      <div class="modal-card">
+        <header class="modal-head">
+          <div><span class="eyebrow">MANUAL DE SUPERVIVENCIA</span><h2>Cómo jugar</h2></div>
+          <button type="button" class="close-btn" id="helpClose" aria-label="Cerrar">✕</button>
+        </header>
+        <div class="help-grid">
+          <div class="help-block">
+            <h3>Controles</h3>
+            <ul class="key-list">
+              <li><kbd>W A S D</kbd><span>Moverte</span></li>
+              <li><kbd>Ratón</kbd><span>Mirar</span></li>
+              <li><kbd>E</kbd><span>Interactuar / recoger</span></li>
+              <li><kbd>Clic izq.</kbd><span>Golpear, talar, minar</span></li>
+              <li><kbd>C</kbd><span>Fabricar</span></li>
+              <li><kbd>F</kbd><span>Pescar</span></li>
+              <li><kbd>Q</kbd><span>Comer</span></li>
+              <li><kbd>Shift</kbd><span>Correr</span></li>
+              <li><kbd>Esc</kbd><span>Pausa</span></li>
+            </ul>
+          </div>
+          <div class="help-block">
+            <h3>Tu misión</h3>
+            <ol class="step-list">
+              <li>Recoge madera, piedra, cuerda y tela.</li>
+              <li>Fabrica un hacha, una lanza y una caña.</li>
+              <li>Construye la balsa en el astillero de la Isla Inicio.</li>
+              <li>Visita los 4 refugios y abre sus cofres para conseguir las bengalas.</li>
+              <li>Vuelve al faro del campamento y lanza la señal de rescate.</li>
+            </ol>
+          </div>
+          <div class="help-block">
+            <h3>Consejos</h3>
+            <ul class="tip-list">
+              <li>Bebe en los manantiales junto a cada refugio.</li>
+              <li>Asa pescado o carne en la hoguera para comer mejor.</li>
+              <li>Refúgiate bajo techo durante las tormentas: perderás calor.</li>
+              <li>Los jabalíes atacan de noche. Lleva una lanza.</li>
+              <li>En la balsa usa W/S para avanzar y A/D para girar.</li>
+              <li>La comida y el agua se agotan: vigila las barras.</li>
+            </ul>
+          </div>
+          <div class="help-block mobile-help">
+            <h3>En móvil</h3>
+            <ul class="tip-list">
+              <li>Joystick izquierdo para moverte.</li>
+              <li>Arrastra el dedo en la mitad derecha para mirar.</li>
+              <li>Usa los botones USAR, GOLPE, PESCA, COMER y CREAR.</li>
+            </ul>
+          </div>
+        </div>
+        <button type="button" class="primary-btn wide" id="helpPlay">VOLVER</button>
+      </div>
+    </div>
+
+    <div id="craftModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Fabricar">
+      <div class="modal-card wide-card">
+        <header class="modal-head">
+          <div><span class="eyebrow">TRABAJO DE SUPERVIVENCIA</span><h2>Fabricar</h2></div>
+          <button type="button" class="close-btn" id="craftClose" aria-label="Cerrar">✕</button>
+        </header>
+        <div id="craftInventory" class="inventory-strip"></div>
+        <div id="recipeList" class="recipe-list"></div>
+        <p class="modal-note">La balsa no se fabrica aquí: se construye en el <b>astillero</b> de la Isla Inicio con 16 madera, 6 cuerda y 2 tela.</p>
+      </div>
+    </div>
+
+    <div id="pauseScreen" class="screen hidden">
+      <div class="pause-card">
+        <div class="eyebrow">EL MAR ESPERA</div>
+        <h2>PAUSA</h2>
+        <button type="button" class="primary-btn wide" id="resumeBtn">CONTINUAR</button>
+        <button type="button" class="ghost-btn wide" id="pauseHelpBtn">CÓMO JUGAR</button>
+        <button type="button" class="ghost-btn wide" id="muteBtn">SONIDO: SÍ</button>
+        <button type="button" class="ghost-btn wide" id="restartBtn">REINICIAR PARTIDA</button>
+      </div>
+    </div>
+
+    <div id="deathScreen" class="screen hidden">
+      <div class="pause-card death-card">
+        <div class="eyebrow">EL ARCHIPIÉLAGO COBRA SU PRECIO</div>
+        <h2>HAS CAÍDO</h2>
+        <p id="deathText">Despiertas de nuevo en el último refugio. Algo de tu equipo se ha perdido.</p>
+        <button type="button" class="primary-btn wide" id="respawnBtn">REAPARECER</button>
+        <div class="auto-timer"><span id="respawnCount">8</span>s</div>
+      </div>
+    </div>
+
+    <div id="victoryScreen" class="screen hidden">
+      <div class="victory-inner">
+        <div class="eyebrow">LA SEÑAL HA SIDO VISTA</div>
+        <h1>¡RESCATE!</h1>
+        <p id="victoryText">Un barco emerge entre la niebla. Después de días de tormentas, pesca y peligros, dejas atrás las islas perdidas.</p>
+        <div id="victoryStats" class="victory-stats"></div>
+        <button type="button" class="primary-btn wide" id="againBtn">JUGAR DE NUEVO</button>
+        <p class="victory-small">Gracias por sobrevivir.</p>
+      </div>
+    </div>
+
+    <div id="boot" class="boot">
+      <div class="boot-mark">▲</div>
+      <div class="boot-text">PREPARANDO EL NAUFRAGIO…</div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/game.js"></script>
+</body>
+</html>
